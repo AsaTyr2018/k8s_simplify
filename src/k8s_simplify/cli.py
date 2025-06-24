@@ -5,6 +5,12 @@ from typing import List
 from .phase1 import Phase1Error, prepare_master
 from .phase2 import Phase2Error, init_master
 from .phase3 import Phase3Error, verify_master_node
+from .phase4 import (
+    Phase4Error,
+    get_join_command,
+    join_worker,
+    prepare_worker,
+)
 
 
 @dataclass
@@ -49,9 +55,19 @@ def deploy_workers(cfg: ClusterConfig):
         print("No worker nodes specified, skipping worker deployment")
         return
     print("[Phase 4] Deploying worker nodes")
+    try:
+        join_cmd = get_join_command(cfg.master_ip, cfg.ssh_user, cfg.ssh_password)
+    except Phase4Error as exc:
+        print(exc)
+        raise SystemExit(1)
     for ip in cfg.worker_ips:
-        print(f" - Joining worker {ip}")
-        # TODO: install prereqs and run kubeadm join
+        print(f" - Preparing worker {ip}")
+        try:
+            prepare_worker(ip, cfg.ssh_user, cfg.ssh_password)
+            join_worker(ip, cfg.ssh_user, cfg.ssh_password, join_cmd)
+        except Phase4Error as exc:
+            print(exc)
+            raise SystemExit(1)
 
 
 def check_nodes(cfg: ClusterConfig):
