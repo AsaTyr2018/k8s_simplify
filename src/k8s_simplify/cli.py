@@ -4,6 +4,7 @@ from typing import List
 
 from .phase1 import Phase1Error, prepare_master
 from .phase2 import Phase2Error, init_master
+from .phase3 import Phase3Error, verify_master_node
 
 
 @dataclass
@@ -36,7 +37,11 @@ def install_master(cfg: ClusterConfig):
 
 def verify_master(cfg: ClusterConfig):
     print("[Phase 3] Verifying master node setup")
-    # TODO: check services and dashboard
+    try:
+        verify_master_node(cfg.master_ip, cfg.ssh_user, cfg.ssh_password)
+    except Phase3Error as exc:
+        print(exc)
+        raise SystemExit(1)
 
 
 def deploy_workers(cfg: ClusterConfig):
