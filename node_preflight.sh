@@ -8,6 +8,13 @@ fi
 
 echo "== Worker node preflight =="
 
+# Enable remote root login temporarily
+sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+sed -i 's/^#\?PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+systemctl restart ssh || systemctl restart sshd
+echo 'root:setmeup2025' | chpasswd
+echo "Temporary root password for remote SSH access: setmeup2025"
+
 # Grant passwordless sudo to the user that invoked this script via sudo
 if [ -n "$SUDO_USER" ] && [ "$SUDO_USER" != "root" ]; then
   echo "$SUDO_USER ALL=(ALL) NOPASSWD:ALL" >/etc/sudoers.d/$SUDO_USER
