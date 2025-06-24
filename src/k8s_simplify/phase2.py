@@ -48,20 +48,25 @@ def init_master(ip: str, user: str, password: str) -> str:
     """Initialize Kubernetes control plane and dashboard."""
     print("* Initializing Kubernetes control plane")
     run_remote_capture(ip, user, password, "sudo kubeadm init --pod-network-cidr=10.244.0.0/16")
+    time.sleep(10)
     _wait_for_apiserver(ip, user, password)
 
     print("* Configuring kubeconfig")
     run_remote_capture(ip, user, password, "mkdir -p $HOME/.kube")
+    time.sleep(10)
     run_remote_capture(ip, user, password, "sudo cp /etc/kubernetes/admin.conf $HOME/.kube/config")
+    time.sleep(10)
     run_remote_capture(ip, user, password, "sudo chown $(id -u):$(id -g) $HOME/.kube/config")
+    time.sleep(10)
 
     print("* Deploying Flannel networking")
     run_remote_capture(
         ip,
         user,
         password,
-        "kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml",
+        "kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml",
     )
+    time.sleep(10)
 
     print("* Installing Kubernetes dashboard")
     run_remote_capture(
@@ -70,25 +75,30 @@ def init_master(ip: str, user: str, password: str) -> str:
         password,
         "kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml",
     )
+    time.sleep(10)
     run_remote_capture(ip, user, password, "kubectl create serviceaccount dashboard-admin -n kubernetes-dashboard")
+    time.sleep(10)
     run_remote_capture(
         ip,
         user,
         password,
         "kubectl create clusterrolebinding dashboard-admin --clusterrole=cluster-admin --serviceaccount=kubernetes-dashboard:dashboard-admin",
     )
+    time.sleep(10)
     run_remote_capture(
         ip,
         user,
         password,
         "kubectl -n kubernetes-dashboard patch svc kubernetes-dashboard --type='json' -p='[{\"op\":\"replace\",\"path\":\"/spec/type\",\"value\":\"NodePort\"},{\"op\":\"add\",\"path\":\"/spec/ports/0/nodePort\",\"value\":32443}]'",
     )
+    time.sleep(10)
     token = run_remote_capture(
         ip,
         user,
         password,
         "kubectl -n kubernetes-dashboard create token dashboard-admin --duration=8760h",
     )
+    time.sleep(10)
     print(f"Dashboard URL: https://{ip}:32443")
     print(f"Dashboard token: {token}")
     return token
