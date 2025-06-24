@@ -29,6 +29,20 @@ python -m k8s_simplify rollback --master 192.168.1.10 \
 
 The `suplement/` directory contains old helper scripts kept for reference only.
 
+## Preflight scripts
+
+Two shell scripts are provided to prepare hosts before running the automated
+installer:
+
+- `master_preflight.sh` – run on the machine that will become the control plane
+  node.
+- `node_preflight.sh` – run on each worker node.
+
+Both scripts must be executed as root. They install containerd and the
+Kubernetes packages, disable swap and enable IPv4 forwarding. After running the
+master script you can execute the `install` command from your management
+machine to provision the cluster.
+
 ## Requirements
 
 The CLI relies on `ssh` being installed locally. If you supply a password via
