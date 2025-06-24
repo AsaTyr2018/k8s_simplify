@@ -39,9 +39,11 @@ installer:
 - `node_preflight.sh` – run on each worker node.
 
 Both scripts must be executed as root. They install containerd and the
-Kubernetes packages, disable swap and enable IPv4 forwarding. After running the
-master script you can execute the `install` command from your management
-machine to provision the cluster.
+Kubernetes packages, disable swap and enable IPv4 forwarding. When invoked via
+`sudo`, the scripts also grant passwordless sudo rights to the user that ran the
+command, ensuring that the Python installer can operate without prompting for a
+password. After running the master script you can execute the `install` command
+from your management machine to provision the cluster.
 
 ## Requirements
 

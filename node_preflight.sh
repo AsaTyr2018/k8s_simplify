@@ -8,6 +8,11 @@ fi
 
 echo "== Worker node preflight =="
 
+# Grant passwordless sudo to the user that invoked this script via sudo
+if [ -n "$SUDO_USER" ] && [ "$SUDO_USER" != "root" ]; then
+  echo "$SUDO_USER ALL=(ALL) NOPASSWD:ALL" >/etc/sudoers.d/$SUDO_USER
+fi
+
 apt-get update -y
 apt-get install -y containerd apt-transport-https curl gpg
 
