@@ -2,6 +2,8 @@ import argparse
 from dataclasses import dataclass, field
 from typing import List
 
+from .phase1 import Phase1Error, prepare_master
+
 
 @dataclass
 class ClusterConfig:
@@ -14,7 +16,11 @@ class ClusterConfig:
 
 def master_node_preparation(cfg: ClusterConfig):
     print(f"[Phase 1] Preparing master node {cfg.master_ip}")
-    # TODO: validate packages, disable swap, etc.
+    try:
+        prepare_master(cfg.master_ip, cfg.ssh_user, cfg.ssh_password)
+    except Phase1Error as exc:
+        print(exc)
+        raise SystemExit(1)
 
 
 def install_master(cfg: ClusterConfig):
