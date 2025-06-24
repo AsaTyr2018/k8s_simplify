@@ -12,6 +12,7 @@ from .phase4 import (
     prepare_worker,
 )
 from .phase5 import Phase5Error, check_node_health, list_nodes
+from .phase6 import Phase6Error, finalize_cluster
 
 
 @dataclass
@@ -22,6 +23,7 @@ class ClusterConfig:
     ssh_user: str = ""
     ssh_password: str = ""
     dashboard_token: str = ""
+    export_file: str = ""
 
 
 def master_node_preparation(cfg: ClusterConfig):
@@ -86,8 +88,18 @@ def check_nodes(cfg: ClusterConfig):
 def finalize_install(cfg: ClusterConfig):
     print("[Phase 6] Finalizing installation")
     if cfg.dashboard_token:
-        print(f"Dashboard URL: https://{cfg.master_ip}:32443")
-        print(f"Dashboard token: {cfg.dashboard_token}")
+        try:
+            finalize_cluster(
+                cfg.master_ip,
+                cfg.worker_ips,
+                cfg.ssh_user,
+                cfg.ssh_password,
+                cfg.dashboard_token,
+                cfg.export_file or None,
+            )
+        except Phase6Error as exc:
+            print(exc)
+            raise SystemExit(1)
 
 
 def install_cluster(args: argparse.Namespace):
@@ -97,6 +109,7 @@ def install_cluster(args: argparse.Namespace):
         worker_ips=args.workers or [],
         ssh_user=args.user,
         ssh_password=args.password,
+        export_file=args.export_file or "",
     )
     master_node_preparation(cfg)
     install_master(cfg)
@@ -126,6 +139,10 @@ def main():
     install.add_argument("--workers", nargs="*", help="Worker node IPs")
     install.add_argument("--user", default="root", help="SSH username")
     install.add_argument("--password", default="", help="SSH password")
+    install.add_argument(
+        "--export-file",
+        help="Write final cluster information to file",
+    )
     install.set_defaults(func=install_cluster)
 
     update = sub.add_parser("update", help="Update existing cluster")
