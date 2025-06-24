@@ -1,6 +1,7 @@
 """Utilities for Phase 2: Kubernetes master installation."""
 
 from subprocess import CalledProcessError, run
+from typing import Optional
 
 from .phase1 import _ssh_cmd
 
@@ -9,14 +10,20 @@ class Phase2Error(Exception):
     """Custom exception for phase 2 failures."""
 
 
-def run_remote_capture(ip: str, user: str, password: str, command: str) -> str:
-    """Run a remote command via SSH and return its output."""
+def run_remote_capture(ip: str, user: str, password: str, command: str, retries: int = 2) -> str:
+    """Run a remote command via SSH and return its output with retries."""
     cmd = _ssh_cmd(ip, user, password, command)
-    try:
-        result = run(cmd, check=True, capture_output=True, text=True)
-    except CalledProcessError as exc:
-        raise Phase2Error(f"Command failed on {ip}: {command}") from exc
-    return result.stdout.strip()
+    last_exc: Optional[CalledProcessError] = None
+    for _ in range(retries + 1):
+        try:
+            result = run(cmd, check=True, capture_output=True, text=True)
+            return result.stdout.strip()
+        except CalledProcessError as exc:
+            last_exc = exc
+    stderr = ""
+    if last_exc and last_exc.stderr:
+        stderr = last_exc.stderr.decode("utf-8", "ignore")
+    raise Phase2Error(f"Command failed on {ip}: {command}\n{stderr}") from last_exc
 
 
 def init_master(ip: str, user: str, password: str) -> str:

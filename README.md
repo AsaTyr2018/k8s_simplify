@@ -28,3 +28,21 @@ python -m k8s_simplify rollback --master 192.168.1.10 \
 ```
 
 The `suplement/` directory contains old helper scripts kept for reference only.
+
+## Requirements
+
+The CLI relies on `ssh` being installed locally. If you supply a password via
+the `--password` option, `sshpass` must also be available. Each remote host must
+provide `sudo` access for the user supplied to the tool.
+
+Outbound internet access is required during installation because the scripts
+download Kubernetes manifests and packages. On hosts without access or with a
+different package manager, manual preparation may be required.
+
+## Limitations
+
+Password authentication over SSH is supported but may be disabled in some
+environments. Using key-based authentication is recommended. All remote commands
+run under the provided user account using `sudo`; if that user lacks the
+necessary privileges or home directory setup, some steps such as copying
+`admin.conf` could fail.
