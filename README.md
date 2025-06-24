@@ -4,7 +4,8 @@ This project provides a framework for deploying and managing Kubernetes clusters
 It follows a phase-based workflow described in `AGENTS.md`.
 Phases 1-4 (master preparation, installation, verification and worker
 deployment) are implemented and run automatically as part of the `install`
-command.
+command. Phase 5 performs a health check to ensure all nodes report `Ready`
+status after joining the cluster.
 
 ## Usage
 

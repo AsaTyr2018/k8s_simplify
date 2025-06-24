@@ -11,6 +11,7 @@ from .phase4 import (
     join_worker,
     prepare_worker,
 )
+from .phase5 import Phase5Error, check_node_health, list_nodes
 
 
 @dataclass
@@ -72,7 +73,14 @@ def deploy_workers(cfg: ClusterConfig):
 
 def check_nodes(cfg: ClusterConfig):
     print("[Phase 5] Checking node health")
-    # TODO: kubectl get nodes
+    try:
+        print("* Current node status:")
+        nodes = list_nodes(cfg.master_ip, cfg.ssh_user, cfg.ssh_password)
+        print(nodes)
+        check_node_health(cfg.master_ip, cfg.ssh_user, cfg.ssh_password)
+    except Phase5Error as exc:
+        print(exc)
+        raise SystemExit(1)
 
 
 def finalize_install(cfg: ClusterConfig):
