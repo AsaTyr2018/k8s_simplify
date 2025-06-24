@@ -16,10 +16,15 @@ python -m k8s_simplify install --name mycluster --master 192.168.1.10 --workers 
     --export-file cluster_info.txt
 
 # Update cluster
-python -m k8s_simplify update --target-version v1.33.0
+python -m k8s_simplify update --master 192.168.1.10 \
+    --workers 192.168.1.11 192.168.1.12 \
+    --user root --password mypass \
+    --target-version v1.33.0
 
 # Rollback cluster
-python -m k8s_simplify rollback
+python -m k8s_simplify rollback --master 192.168.1.10 \
+    --workers 192.168.1.11 192.168.1.12 \
+    --user root --password mypass
 ```
 
 The `suplement/` directory contains old helper scripts kept for reference only.
