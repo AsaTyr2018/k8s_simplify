@@ -13,6 +13,20 @@ from .phase4 import (
 )
 from .phase5 import Phase5Error, check_node_health, list_nodes
 from .phase6 import Phase6Error, finalize_cluster
+from .update import (
+    UpdateError,
+    post_update_validation,
+    pre_update_check,
+    update_master,
+    update_workers,
+)
+from .rollback import (
+    RollbackError,
+    post_rollback_validation,
+    rejoin_workers,
+    rollback_master,
+    rollback_workers,
+)
 
 
 @dataclass
@@ -120,13 +134,49 @@ def install_cluster(args: argparse.Namespace):
 
 
 def update_cluster(args: argparse.Namespace):
+    cfg = ClusterConfig(
+        cluster_name="",
+        master_ip=args.master,
+        worker_ips=args.workers or [],
+        ssh_user=args.user,
+        ssh_password=args.password,
+    )
     print("Starting cluster update")
-    # TODO: implement update workflow
+    try:
+        versions = pre_update_check(
+            cfg.master_ip, cfg.worker_ips, cfg.ssh_user, cfg.ssh_password
+        )
+        for ip, ver in versions.items():
+            print(f"Current version on {ip}: {ver}")
+        update_master(cfg.master_ip, cfg.ssh_user, cfg.ssh_password, args.target_version)
+        update_workers(cfg.worker_ips, cfg.ssh_user, cfg.ssh_password, args.target_version)
+        post_update_validation(
+            cfg.master_ip, cfg.worker_ips, cfg.ssh_user, cfg.ssh_password
+        )
+        print("Update complete")
+    except UpdateError as exc:
+        print(exc)
+        raise SystemExit(1)
 
 
 def rollback_cluster(args: argparse.Namespace):
+    cfg = ClusterConfig(
+        cluster_name="",
+        master_ip=args.master,
+        worker_ips=args.workers or [],
+        ssh_user=args.user,
+        ssh_password=args.password,
+    )
     print("Starting rollback")
-    # TODO: implement rollback workflow
+    try:
+        rollback_master(cfg.master_ip, cfg.ssh_user, cfg.ssh_password)
+        rollback_workers(cfg.worker_ips, cfg.ssh_user, cfg.ssh_password)
+        rejoin_workers(cfg.master_ip, cfg.worker_ips, cfg.ssh_user, cfg.ssh_password)
+        post_rollback_validation(cfg.master_ip, cfg.ssh_user, cfg.ssh_password)
+        print("Rollback complete")
+    except RollbackError as exc:
+        print(exc)
+        raise SystemExit(1)
 
 
 def main():
@@ -146,10 +196,18 @@ def main():
     install.set_defaults(func=install_cluster)
 
     update = sub.add_parser("update", help="Update existing cluster")
+    update.add_argument("--master", required=True, help="Master node IP")
+    update.add_argument("--workers", nargs="*", help="Worker node IPs")
+    update.add_argument("--user", default="root", help="SSH username")
+    update.add_argument("--password", default="", help="SSH password")
     update.add_argument("--target-version", required=True, help="Target kube version")
     update.set_defaults(func=update_cluster)
 
     rollback = sub.add_parser("rollback", help="Rollback cluster changes")
+    rollback.add_argument("--master", required=True, help="Master node IP")
+    rollback.add_argument("--workers", nargs="*", help="Worker node IPs")
+    rollback.add_argument("--user", default="root", help="SSH username")
+    rollback.add_argument("--password", default="", help="SSH password")
     rollback.set_defaults(func=rollback_cluster)
 
     args = parser.parse_args()
