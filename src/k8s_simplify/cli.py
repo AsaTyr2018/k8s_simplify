@@ -13,6 +13,7 @@ from .phase4 import (
 )
 from .phase5 import Phase5Error, check_node_health, list_nodes
 from .phase6 import Phase6Error, finalize_cluster
+from .utils import check_local_tools
 from .update import (
     UpdateError,
     post_update_validation,
@@ -211,6 +212,7 @@ def main():
     rollback.set_defaults(func=rollback_cluster)
 
     args = parser.parse_args()
+    check_local_tools(bool(getattr(args, "password", "")))
     args.func(args)
 
 

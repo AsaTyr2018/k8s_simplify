@@ -1,6 +1,8 @@
 """Utilities for Phase 1: master node preparation."""
 
 from subprocess import CalledProcessError, run
+import shutil
+from typing import Optional
 from typing import List
 
 
@@ -11,16 +13,27 @@ class Phase1Error(Exception):
 def _ssh_cmd(ip: str, user: str, password: str, command: str) -> List[str]:
     base = ["ssh", "-o", "StrictHostKeyChecking=no", f"{user}@{ip}", command]
     if password:
+        if shutil.which("sshpass") is None:
+            raise Phase1Error("sshpass is required for password authentication")
         return ["sshpass", "-p", password] + base
     return base
 
 
-def run_remote(ip: str, user: str, password: str, command: str) -> None:
-    """Run a command on a remote host via SSH."""
-    try:
-        run(_ssh_cmd(ip, user, password, command), check=True)
-    except CalledProcessError as exc:
-        raise Phase1Error(f"Command failed on {ip}: {command}") from exc
+def run_remote(ip: str, user: str, password: str, command: str, retries: int = 2) -> None:
+    """Run a command on a remote host via SSH with simple retries."""
+    last_exc: Optional[CalledProcessError] = None
+    for _ in range(retries + 1):
+        try:
+            run(_ssh_cmd(ip, user, password, command), check=True)
+            return
+        except CalledProcessError as exc:
+            last_exc = exc
+    stderr = ""
+    if last_exc and last_exc.stderr:
+        stderr = last_exc.stderr.decode("utf-8", "ignore")
+    raise Phase1Error(
+        f"Command failed on {ip}: {command}\n{stderr}"
+    ) from last_exc
 
 
 def prepare_master(ip: str, user: str, password: str) -> None:
