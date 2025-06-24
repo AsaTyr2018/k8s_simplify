@@ -2,8 +2,8 @@
 
 This project provides a framework for deploying and managing Kubernetes clusters on Linux.
 It follows a phase-based workflow described in `AGENTS.md`.
-The first phase (master node preparation) is now implemented and automatically
-runs as part of the `install` command.
+Phases 1 and 2 (master preparation and installation) are implemented and run
+automatically as part of the `install` command.
 
 ## Usage
 

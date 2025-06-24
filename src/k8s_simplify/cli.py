@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 from .phase1 import Phase1Error, prepare_master
+from .phase2 import Phase2Error, init_master
 
 
 @dataclass
@@ -12,6 +13,7 @@ class ClusterConfig:
     worker_ips: List[str] = field(default_factory=list)
     ssh_user: str = ""
     ssh_password: str = ""
+    dashboard_token: str = ""
 
 
 def master_node_preparation(cfg: ClusterConfig):
@@ -25,7 +27,11 @@ def master_node_preparation(cfg: ClusterConfig):
 
 def install_master(cfg: ClusterConfig):
     print(f"[Phase 2] Installing Kubernetes on master {cfg.master_ip}")
-    # TODO: kubeadm init and dashboard setup
+    try:
+        cfg.dashboard_token = init_master(cfg.master_ip, cfg.ssh_user, cfg.ssh_password)
+    except Phase2Error as exc:
+        print(exc)
+        raise SystemExit(1)
 
 
 def verify_master(cfg: ClusterConfig):
@@ -50,7 +56,9 @@ def check_nodes(cfg: ClusterConfig):
 
 def finalize_install(cfg: ClusterConfig):
     print("[Phase 6] Finalizing installation")
-    # TODO: display dashboard URL and token
+    if cfg.dashboard_token:
+        print(f"Dashboard URL: https://{cfg.master_ip}:32443")
+        print(f"Dashboard token: {cfg.dashboard_token}")
 
 
 def install_cluster(args: argparse.Namespace):
