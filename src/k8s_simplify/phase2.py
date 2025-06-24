@@ -2,6 +2,7 @@
 
 from subprocess import CalledProcessError, run
 from typing import Optional
+import time
 
 from .phase1 import _ssh_cmd
 
@@ -26,10 +27,28 @@ def run_remote_capture(ip: str, user: str, password: str, command: str, retries:
     ) from last_exc
 
 
+def _wait_for_apiserver(ip: str, user: str, password: str, timeout: int = 60) -> None:
+    """Wait until the API server on the master node becomes reachable."""
+    end_time = time.time() + timeout
+    while time.time() < end_time:
+        try:
+            run_remote_capture(
+                ip,
+                user,
+                password,
+                f"curl -kfs https://{ip}:6443/healthz >/dev/null",
+            )
+            return
+        except Phase2Error:
+            time.sleep(5)
+    raise Phase2Error(f"API server on {ip} did not become ready")
+
+
 def init_master(ip: str, user: str, password: str) -> str:
     """Initialize Kubernetes control plane and dashboard."""
     print("* Initializing Kubernetes control plane")
     run_remote_capture(ip, user, password, "sudo kubeadm init --pod-network-cidr=10.244.0.0/16")
+    _wait_for_apiserver(ip, user, password)
 
     print("* Configuring kubeconfig")
     run_remote_capture(ip, user, password, "mkdir -p $HOME/.kube")
