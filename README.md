@@ -68,3 +68,7 @@ environments. Using key-based authentication is recommended. All remote commands
 run under the provided user account using `sudo`; if that user lacks the
 necessary privileges or home directory setup, some steps such as copying
 `admin.conf` could fail.
+
+## Troubleshooting
+
+See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues encountered during the setup phases.
