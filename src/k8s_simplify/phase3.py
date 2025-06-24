@@ -20,10 +20,10 @@ def run_remote_capture(ip: str, user: str, password: str, command: str, retries:
             return result.stdout.strip()
         except CalledProcessError as exc:
             last_exc = exc
-    stderr = ""
-    if last_exc and last_exc.stderr:
-        stderr = last_exc.stderr.decode("utf-8", "ignore")
-    raise Phase3Error(f"Command failed on {ip}: {command}\n{stderr}") from last_exc
+    stderr = last_exc.stderr if last_exc and last_exc.stderr else ""
+    raise Phase3Error(
+        f"Command failed on {ip}: {command}\n{stderr}"
+    ) from last_exc
 
 
 def check_service_active(ip: str, user: str, password: str, service: str) -> None:

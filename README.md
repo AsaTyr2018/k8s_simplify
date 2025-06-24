@@ -37,7 +37,9 @@ provide `sudo` access for the user supplied to the tool.
 
 Outbound internet access is required during installation because the scripts
 download Kubernetes manifests and packages. On hosts without access or with a
-different package manager, manual preparation may be required.
+different package manager, manual preparation may be required. The automation
+expects an apt-based system with passwordless `sudo` available for the chosen
+user; other environments may need manual adjustments.
 
 ## Limitations
 
