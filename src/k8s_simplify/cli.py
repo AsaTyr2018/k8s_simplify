@@ -1,0 +1,100 @@
+import argparse
+from dataclasses import dataclass, field
+from typing import List
+
+
+@dataclass
+class ClusterConfig:
+    cluster_name: str
+    master_ip: str
+    worker_ips: List[str] = field(default_factory=list)
+    ssh_user: str = ""
+    ssh_password: str = ""
+
+
+def master_node_preparation(cfg: ClusterConfig):
+    print(f"[Phase 1] Preparing master node {cfg.master_ip}")
+    # TODO: validate packages, disable swap, etc.
+
+
+def install_master(cfg: ClusterConfig):
+    print(f"[Phase 2] Installing Kubernetes on master {cfg.master_ip}")
+    # TODO: kubeadm init and dashboard setup
+
+
+def verify_master(cfg: ClusterConfig):
+    print("[Phase 3] Verifying master node setup")
+    # TODO: check services and dashboard
+
+
+def deploy_workers(cfg: ClusterConfig):
+    if not cfg.worker_ips:
+        print("No worker nodes specified, skipping worker deployment")
+        return
+    print("[Phase 4] Deploying worker nodes")
+    for ip in cfg.worker_ips:
+        print(f" - Joining worker {ip}")
+        # TODO: install prereqs and run kubeadm join
+
+
+def check_nodes(cfg: ClusterConfig):
+    print("[Phase 5] Checking node health")
+    # TODO: kubectl get nodes
+
+
+def finalize_install(cfg: ClusterConfig):
+    print("[Phase 6] Finalizing installation")
+    # TODO: display dashboard URL and token
+
+
+def install_cluster(args: argparse.Namespace):
+    cfg = ClusterConfig(
+        cluster_name=args.name,
+        master_ip=args.master,
+        worker_ips=args.workers or [],
+        ssh_user=args.user,
+        ssh_password=args.password,
+    )
+    master_node_preparation(cfg)
+    install_master(cfg)
+    verify_master(cfg)
+    deploy_workers(cfg)
+    check_nodes(cfg)
+    finalize_install(cfg)
+
+
+def update_cluster(args: argparse.Namespace):
+    print("Starting cluster update")
+    # TODO: implement update workflow
+
+
+def rollback_cluster(args: argparse.Namespace):
+    print("Starting rollback")
+    # TODO: implement rollback workflow
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Kubernetes simplify toolkit")
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    install = sub.add_parser("install", help="Install a new cluster")
+    install.add_argument("--name", required=True, help="Cluster name")
+    install.add_argument("--master", required=True, help="Master node IP")
+    install.add_argument("--workers", nargs="*", help="Worker node IPs")
+    install.add_argument("--user", default="root", help="SSH username")
+    install.add_argument("--password", default="", help="SSH password")
+    install.set_defaults(func=install_cluster)
+
+    update = sub.add_parser("update", help="Update existing cluster")
+    update.add_argument("--target-version", required=True, help="Target kube version")
+    update.set_defaults(func=update_cluster)
+
+    rollback = sub.add_parser("rollback", help="Rollback cluster changes")
+    rollback.set_defaults(func=rollback_cluster)
+
+    args = parser.parse_args()
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()
