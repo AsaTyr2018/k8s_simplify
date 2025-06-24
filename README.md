@@ -42,8 +42,12 @@ Both scripts must be executed as root. They install containerd and the
 Kubernetes packages, disable swap and enable IPv4 forwarding. When invoked via
 `sudo`, the scripts also grant passwordless sudo rights to the user that ran the
 command, ensuring that the Python installer can operate without prompting for a
-password. After running the master script you can execute the `install` command
-from your management machine to provision the cluster.
+password. During preflight a temporary root password of `setmeup2025` is set and
+SSH is configured to allow root login so that the installer can connect
+remotely. The password is printed to the console. After phase 6 completes, the
+installer disables root SSH access and locks the password again.
+After running the master script you can execute the `install` command from your
+management machine to provision the cluster.
 
 ## Requirements
 

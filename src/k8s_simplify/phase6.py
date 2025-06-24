@@ -4,6 +4,7 @@ from typing import Dict, List
 
 from .phase2 import run_remote_capture
 from .phase5 import list_nodes
+from .phase1 import run_remote
 
 
 class Phase6Error(Exception):
@@ -40,7 +41,11 @@ def finalize_cluster(
     token: str,
     export_file: str | None = None,
 ) -> None:
-    """Display final cluster information and optionally write to a file."""
+    """Display final cluster information and optionally write to a file.
+
+    After printing the summary, root SSH access on the master node is disabled
+    again and the root password is locked to prevent login.
+    """
     try:
         nodes = list_nodes(master_ip, user, password)
         services = gather_cluster_summary(master_ip, worker_ips, user, password)
@@ -70,3 +75,21 @@ def finalize_cluster(
         except OSError as exc:
             raise Phase6Error(f"Failed to write summary to {export_file}") from exc
         print(f"Details exported to {export_file}")
+
+    # Secure the master by disabling remote root login and locking the password
+    try:
+        run_remote(
+            master_ip,
+            user,
+            password,
+            "sudo sed -i 's/^#\\?PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config",
+        )
+        run_remote(
+            master_ip,
+            user,
+            password,
+            "sudo systemctl restart ssh || sudo systemctl restart sshd",
+        )
+        run_remote(master_ip, user, password, "sudo passwd -l root")
+    except Exception as exc:  # broad but fine for CLI
+        raise Phase6Error("Failed to secure root account") from exc
