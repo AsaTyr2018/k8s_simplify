@@ -24,15 +24,19 @@ def run_remote(ip: str, user: str, password: str, command: str, retries: int = 2
     last_exc: Optional[CalledProcessError] = None
     for _ in range(retries + 1):
         try:
-            run(_ssh_cmd(ip, user, password, command), check=True)
+            run(
+                _ssh_cmd(ip, user, password, command),
+                check=True,
+                capture_output=True,
+                text=True,
+            )
             return
         except CalledProcessError as exc:
             last_exc = exc
-    stderr = ""
-    if last_exc and last_exc.stderr:
-        stderr = last_exc.stderr.decode("utf-8", "ignore")
+    stderr = last_exc.stderr or ""
+    stdout = last_exc.stdout or ""
     raise Phase1Error(
-        f"Command failed on {ip}: {command}\n{stderr}"
+        f"Command failed on {ip}: {command}\nSTDOUT: {stdout}\nSTDERR: {stderr}"
     ) from last_exc
 
 

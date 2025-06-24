@@ -45,8 +45,21 @@ def update_master(ip: str, user: str, password: str, version: str) -> None:
 def update_worker(ip: str, user: str, password: str, version: str) -> None:
     """Upgrade Kubernetes components on a worker node."""
     try:
-        run_remote(ip, user, password, "sudo kubeadm upgrade node")
-        run_remote(ip, user, password, "sudo apt-get install -y kubelet kubeadm kubectl")
+        run_remote(
+            ip,
+            user,
+            password,
+            (
+                "sudo apt-get install -y "
+                f"kubelet={version} kubeadm={version} kubectl={version}"
+            ),
+        )
+        run_remote(
+            ip,
+            user,
+            password,
+            f"sudo kubeadm upgrade node --kubelet-version {version}",
+        )
         run_remote(ip, user, password, "sudo systemctl restart kubelet")
     except Exception as exc:
         raise UpdateError(f"Failed to update worker {ip}") from exc
