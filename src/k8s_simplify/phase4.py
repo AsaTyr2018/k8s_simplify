@@ -33,7 +33,7 @@ def prepare_worker(ip: str, user: str, password: str) -> None:
         "sudo systemctl restart containerd",
         (
             "curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | "
-            "sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg"
+            "sudo gpg --batch --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg"
         ),
         (
             "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] "

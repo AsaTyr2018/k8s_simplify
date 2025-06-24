@@ -34,7 +34,7 @@ if [ ! -d /etc/apt/keyrings ]; then
 fi
 if [ ! -f /etc/apt/keyrings/kubernetes-apt-keyring.gpg ]; then
   curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key \
-    | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    | gpg --batch --yes --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 fi
 cat <<'REPO' >/etc/apt/sources.list.d/kubernetes.list
 deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /
