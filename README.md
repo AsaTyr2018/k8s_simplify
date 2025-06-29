@@ -1,4 +1,4 @@
-# k8s_simplify
+# k8s_simplify (WORK IN PROGRESS!)
 
 This project provides a framework for deploying and managing Kubernetes clusters on Linux.
 It follows a phase-based workflow described in `AGENTS.md`.
